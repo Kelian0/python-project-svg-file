@@ -8,11 +8,14 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
     import numpy as np
-    return
+    from PIL import Image
+    return (Image,)
 
 
 @app.cell
-def _():
+def _(Image):
+    image = Image.open("image\png\screenshot.png")
+    # image.show()
     return
 
 

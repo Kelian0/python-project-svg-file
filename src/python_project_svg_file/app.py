@@ -22,6 +22,7 @@ def _(Image):
 @app.cell
 def _(image):
     print(image)
+    img_ratio = 900 / 506
     return
 
 
@@ -33,15 +34,15 @@ def _(mo):
 
 @app.cell
 def _(np):
-    def map_hex(img, size):
+    def map_hex(img_x, img_y, size):
         """
         I choose the convention odd-q
         """
         horiz_spacing = 3 / 2 * size
         vert_spacing = np.sqrt(3) * size
 
-        hex_per_row = int(img.size[0] // horiz_spacing)
-        hex_per_col = int(img.size[1] // vert_spacing)
+        hex_per_row = int(img_x // horiz_spacing)
+        hex_per_col = int(img_y // vert_spacing)
         hex_mapping = np.empty((hex_per_row, hex_per_col, 2))
 
         for j in range(hex_per_row):
@@ -88,7 +89,8 @@ def _(ImageDraw):
 def _(draw_hex_from_mapping, image, map_hex):
     size = 13
     testing_image = image.copy()
-    hex_map = map_hex(image, size)
+    hex_map = map_hex(image.size[0], image.size[1], size)
+    # 46 by 22
 
     draw_hex_from_mapping(testing_image, hex_mapping=hex_map, size=size)
 
@@ -141,7 +143,7 @@ def _(hex_color_map, hex_map, image):
 
 @app.cell
 def _(np):
-    def hex_point(x, y, size, imagesizex, imagesizey):
+    def hex_points(x, y, size, imagesizex, imagesizey):
         i = np.array(range(6))
         angle_deg = 60 * i
         angle_rad = np.pi / 180 * angle_deg
@@ -160,8 +162,39 @@ def _(np):
     return
 
 
-@app.cell
-def _():
+app._unparsable_cell(
+    r"""
+    img_size = 507
+    # 46 by 22
+
+    width = img_size * img_ratio
+    height = img_size
+    hexsvg_size = (width / 45) * (2 / 3)
+
+    hex_map_svg = map_hex(width, height, hexsvg_size)
+
+    svg_file = \"./src/python_project_svg_file/output.svg\"
+
+    with open(svg_file, \"w\") as f:
+        f.write(\"<!DOCTYPE html>\n<html>\n<head>\n<title>SVG Hexagon </title>\n</head>\n<body>\")
+        f.write(\"<svg height='110' width = '300'>\")
+        for i in range():
+        f.write('<polygon points=\"100 0, 50 86, 0 86, 0 0, 0 0, 50 0\" fill=\"rgb(255,255,225)\"/>')
+        f.write(\"</svg>\n</body>\n</html>\")
+    """,
+    name="_"
+)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    <svg height='110' width = '300'>
+        <polygon points="100 0, 50 86, 0 86, 0 0, 0 0, 50 0" fill="rgb(255,255,225)"/>
+    </svg>
+    """
+    )
     return
 
 

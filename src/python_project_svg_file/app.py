@@ -98,23 +98,22 @@ def _(draw_hex_from_mapping, image, map_hex):
 
 @app.cell
 def _(np):
-
-    def avg_px(img,x0,y0):
+    def avg_px(img, x0, y0):
         x_lim = img.size[0]
         y_lim = img.size[1]
         nb_px = 0
         avg_color = np.zeros(3)
-        for j in ([-1,0,1]):
-            for i in ([-1,0,1]):
+        for j in [-1, 0, 1]:
+            for i in [-1, 0, 1]:
                 x = x0 + i
-                y = y0 + j 
+                y = y0 + j
                 if x > 0 and x < x_lim and y > 0 and y < y_lim:
-                    avg_color += np.array(img.getpixel((x,y)))
+                    avg_color += np.array(img.getpixel((x, y)))
                     nb_px += 1
 
         return avg_color / nb_px
 
-    
+
     def hex_color_map(img, hex_map):
         m, n = hex_map.shape[0], hex_map.shape[1]
         hex_color_map = np.empty((m, n, 3))
@@ -124,7 +123,9 @@ def _(np):
 
         for j in range(m):
             for i in range(n):
-                hex_color_map[j,i] = avg_px(img,hex_map[j,i,0],hex_map[j,i,1])
+                hex_color_map[j, i] = avg_px(
+                    img, hex_map[j, i, 0], hex_map[j, i, 1]
+                )
 
         return hex_color_map
     return (hex_color_map,)
@@ -135,8 +136,27 @@ def _(hex_color_map, hex_map, image):
     testing_image2 = image.copy()
 
     hex_color = hex_color_map(testing_image2, hex_map=hex_map)
+    return
 
-    print(hex_color)
+
+@app.cell
+def _(np):
+    def hex_point(x, y, size, imagesizex, imagesizey):
+        i = np.array(range(6))
+        angle_deg = 60 * i
+        angle_rad = np.pi / 180 * angle_deg
+        points = np.empty((6, 2))
+        points[:, 0] = x + size * np.cos(angle_rad)
+        points[:, 1] = y + size * np.sin(angle_rad)
+        points[:, 0] = np.where(points[:, 0] > 0, points[:, 0], 0)
+        points[:, 0] = np.where(
+            points[:, 0] < imagesizex, points[:, 0], imagesizex
+        )
+        points[:, 1] = np.where(points[:, 1] > 0, points[:, 1], 0)
+        points[:, 1] = np.where(
+            points[:, 1] < imagesizey, points[:, 1], imagesizey
+        )
+        return np.intc(points)
     return
 
 

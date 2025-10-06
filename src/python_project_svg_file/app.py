@@ -8,8 +8,8 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
     import numpy as np
-    from PIL import Image
-    return Image, mo, np
+    from PIL import Image, ImageDraw
+    return Image, ImageDraw, mo, np
 
 
 @app.cell
@@ -34,22 +34,24 @@ def _(mo):
 @app.cell
 def _(np):
     def map_hex(img, size):
+        """
+        I choose the convention odd-q
+        """
         horiz_spacing = 3 / 2 * size
         vert_spacing = np.sqrt(3) * size
 
         hex_per_row = int(img.size[0] // horiz_spacing)
         hex_per_col = int(img.size[1] // vert_spacing)
-
         hex_mapping = np.empty((hex_per_row, hex_per_col, 2))
 
         for i in range(hex_per_row):
             for j in range(hex_per_col):
-                if j % 2 == 1:
-                    off_set = size
+                if i % 2 == 1:
+                    off_set = vert_spacing / 2
                 else:
                     off_set = 0
-                hex_mapping[i, j, 0] = int(i * vert_spacing)
-                hex_mapping[i, j, 1] = int(j * horiz_spacing + off_set)
+                hex_mapping[i, j, 0] = int(i * horiz_spacing)
+                hex_mapping[i, j, 1] = int(j * vert_spacing + off_set)
         # GREEN = (0, 255, 0, 0)
         # draw = ImageDraw.Draw(img)
         # draw.circle((),outline=GREEN)
@@ -59,10 +61,38 @@ def _(np):
 
 
 @app.cell
-def _(image, map_hex):
-    hex_map = map_hex(image, 50)
+def _(ImageDraw):
+    def draw_hex(fig, x, y, size):
+        draw = ImageDraw.Draw(fig)
+        GREEN = (0, 255, 0, 0)
+        draw.circle((x, y), radius=size, outline=GREEN)
+        return None
 
-    print(hex_map)
+
+    def draw_hex_from_mapping(fig, hex_mapping, size):
+        m, n = hex_mapping.shape[0], hex_mapping.shape[1]
+        for i in range(m):
+            for j in range(n):
+                if (
+                    hex_mapping[i, j, 0] > size
+                    and hex_mapping[i, j, 1] > size
+                    and hex_mapping[i, j, 1] < fig.size[1] - size
+                    and hex_mapping[i, j, 0] < fig.size[0] - size
+                ):
+                    draw_hex(fig, hex_mapping[i, j, 0], hex_mapping[i, j, 1], size)
+        return None
+    return (draw_hex_from_mapping,)
+
+
+@app.cell
+def _(draw_hex_from_mapping, image, map_hex):
+    size = 13
+    testing_image = image.copy()
+    hex_map = map_hex(image, size)
+
+    draw_hex_from_mapping(testing_image, hex_mapping=hex_map, size=size)
+
+    testing_image.show()
     return
 
 

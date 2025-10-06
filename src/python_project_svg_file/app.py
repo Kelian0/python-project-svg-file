@@ -44,14 +44,14 @@ def _(np):
         hex_per_col = int(img.size[1] // vert_spacing)
         hex_mapping = np.empty((hex_per_row, hex_per_col, 2))
 
-        for i in range(hex_per_row):
-            for j in range(hex_per_col):
-                if i % 2 == 1:
+        for j in range(hex_per_row):
+            for i in range(hex_per_col):
+                if j % 2 == 1:
                     off_set = vert_spacing / 2
                 else:
                     off_set = 0
-                hex_mapping[i, j, 0] = int(i * horiz_spacing)
-                hex_mapping[i, j, 1] = int(j * vert_spacing + off_set)
+                hex_mapping[j, i, 0] = int(j * horiz_spacing)
+                hex_mapping[j, i, 1] = int(i * vert_spacing + off_set)
         # GREEN = (0, 255, 0, 0)
         # draw = ImageDraw.Draw(img)
         # draw.circle((),outline=GREEN)
@@ -71,15 +71,15 @@ def _(ImageDraw):
 
     def draw_hex_from_mapping(fig, hex_mapping, size):
         m, n = hex_mapping.shape[0], hex_mapping.shape[1]
-        for i in range(m):
-            for j in range(n):
+        for j in range(m):
+            for i in range(n):
                 if (
-                    hex_mapping[i, j, 0] > size
-                    and hex_mapping[i, j, 1] > size
-                    and hex_mapping[i, j, 1] < fig.size[1] - size
-                    and hex_mapping[i, j, 0] < fig.size[0] - size
+                    hex_mapping[j, i, 0] > size
+                    and hex_mapping[j, i, 1] > size
+                    and hex_mapping[j, i, 1] < fig.size[1] - size
+                    and hex_mapping[j, i, 0] < fig.size[0] - size
                 ):
-                    draw_hex(fig, hex_mapping[i, j, 0], hex_mapping[i, j, 1], size)
+                    draw_hex(fig, hex_mapping[j, i, 0], hex_mapping[j, i, 1], size)
         return None
     return (draw_hex_from_mapping,)
 
@@ -93,6 +93,50 @@ def _(draw_hex_from_mapping, image, map_hex):
     draw_hex_from_mapping(testing_image, hex_mapping=hex_map, size=size)
 
     testing_image.show()
+    return (hex_map,)
+
+
+@app.cell
+def _(np):
+
+    def avg_px(img,x0,y0):
+        x_lim = img.size[0]
+        y_lim = img.size[1]
+        nb_px = 0
+        avg_color = np.zeros(3)
+        for j in ([-1,0,1]):
+            for i in ([-1,0,1]):
+                x = x0 + i
+                y = y0 + j 
+                if x > 0 and x < x_lim and y > 0 and y < y_lim:
+                    avg_color += np.array(img.getpixel((x,y)))
+                    nb_px += 1
+
+        return avg_color / nb_px
+
+    
+    def hex_color_map(img, hex_map):
+        m, n = hex_map.shape[0], hex_map.shape[1]
+        hex_color_map = np.empty((m, n, 3))
+
+        x_max = img.size[0]
+        y_max = img.size[1]
+
+        for j in range(m):
+            for i in range(n):
+                hex_color_map[j,i] = avg_px(img,hex_map[j,i,0],hex_map[j,i,1])
+
+        return hex_color_map
+    return (hex_color_map,)
+
+
+@app.cell
+def _(hex_color_map, hex_map, image):
+    testing_image2 = image.copy()
+
+    hex_color = hex_color_map(testing_image2, hex_map=hex_map)
+
+    print(hex_color)
     return
 
 

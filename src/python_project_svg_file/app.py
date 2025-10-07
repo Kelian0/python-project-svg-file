@@ -140,7 +140,9 @@ def _(hex_color_map, hex_map, image):
 
 @app.cell
 def _(np):
-    def hex_points(x, y, size, imagesizex, imagesizey):
+    def hex_points(x, y, size_input, imagesizex, imagesizey):
+    
+        size = size_input *1.01
         i = np.array(range(6))
         angle_deg = 60 * i
         angle_rad = np.pi / 180 * angle_deg
@@ -160,8 +162,8 @@ def _(np):
 
 
 @app.cell
-def _(hex_color_map, hex_points, image, img_ratio, map_hex, np):
-    img_size = 506
+def _(hex_color_map, hex_map, hex_points, image, img_ratio, map_hex, np):
+    img_size = 1440
     # 46 by 22
 
     width = np.round(img_size * img_ratio,3)
@@ -170,14 +172,14 @@ def _(hex_color_map, hex_points, image, img_ratio, map_hex, np):
 
     hex_map_svg   = map_hex(width, height, hexsvg_size)
 
-    hex_color_svg = hex_color_map(image,hex_map_svg)
+    hex_color_svg = hex_color_map(image,hex_map)
 
     m,n = hex_map_svg.shape[:2]
 
     svg_file = "./src/python_project_svg_file/output.svg"
 
     with open(svg_file, "w") as f:
-        f.write(f"<svg height='{height}' width = '{width}'>")
+        f.write(f"<svg height='{height}' width = '{width}' xmlns='http://www.w3.org/2000/svg'> ")
         f.write("\n")
         for i in range(m):
             for j in range(n):
@@ -191,12 +193,6 @@ def _(hex_color_map, hex_points, image, img_ratio, map_hex, np):
                 f.write("\n")
             
         f.write("</svg>")
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(""" """)
     return
 
 

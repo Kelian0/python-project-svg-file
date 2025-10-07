@@ -23,7 +23,7 @@ def _(Image):
 def _(image):
     print(image)
     img_ratio = 900 / 506
-    return
+    return (img_ratio,)
 
 
 @app.cell(hide_code=True)
@@ -41,8 +41,8 @@ def _(np):
         horiz_spacing = 3 / 2 * size
         vert_spacing = np.sqrt(3) * size
 
-        hex_per_row = int(img_x // horiz_spacing)
-        hex_per_col = int(img_y // vert_spacing)
+        hex_per_row = int(img_x // horiz_spacing)+ 2
+        hex_per_col = int(img_y // vert_spacing) + 1
         hex_mapping = np.empty((hex_per_row, hex_per_col, 2))
 
         for j in range(hex_per_row):
@@ -51,8 +51,8 @@ def _(np):
                     off_set = vert_spacing / 2
                 else:
                     off_set = 0
-                hex_mapping[j, i, 0] = int(j * horiz_spacing)
-                hex_mapping[j, i, 1] = int(i * vert_spacing + off_set)
+                hex_mapping[j, i, 0] = j * horiz_spacing
+                hex_mapping[j, i, 1] = i * vert_spacing + off_set
         # GREEN = (0, 255, 0, 0)
         # draw = ImageDraw.Draw(img)
         # draw.circle((),outline=GREEN)
@@ -105,14 +105,13 @@ def _(np):
         y_lim = img.size[1]
         nb_px = 0
         avg_color = np.zeros(3)
-        for j in [-1, 0, 1]:
-            for i in [-1, 0, 1]:
+        for j in [-20,-5,-1, 0, 1,5,20]:
+            for i in [-20,-5,-1, 0, 1,5,20]:
                 x = x0 + i
                 y = y0 + j
-                if x > 0 and x < x_lim and y > 0 and y < y_lim:
+                if (x > 0 and x < x_lim) and (y > 0 and y < y_lim):
                     avg_color += np.array(img.getpixel((x, y)))
                     nb_px += 1
-
         return avg_color / nb_px
 
 
@@ -125,9 +124,7 @@ def _(np):
 
         for j in range(m):
             for i in range(n):
-                hex_color_map[j, i] = avg_px(
-                    img, hex_map[j, i, 0], hex_map[j, i, 1]
-                )
+                hex_color_map[j, i] = np.intc(avg_px(img, hex_map[j, i, 0], hex_map[j, i, 1]))
 
         return hex_color_map
     return (hex_color_map,)
@@ -158,43 +155,54 @@ def _(np):
         points[:, 1] = np.where(
             points[:, 1] < imagesizey, points[:, 1], imagesizey
         )
-        return np.intc(points)
+        return np.round(points,3)
+    return (hex_points,)
+
+
+@app.cell
+def _(hex_color_map, hex_points, image, img_ratio, map_hex, np):
+    img_size = 506
+    # 46 by 22
+
+    width = np.round(img_size * img_ratio,3)
+    height = np.round(img_size,3)
+    hexsvg_size = (width / 46) * (2 / 3)
+
+    hex_map_svg   = map_hex(width, height, hexsvg_size)
+
+    hex_color_svg = hex_color_map(image,hex_map_svg)
+
+    m,n = hex_map_svg.shape[:2]
+
+    svg_file = "./src/python_project_svg_file/output.svg"
+
+    with open(svg_file, "w") as f:
+        f.write(f"<svg height='{height}' width = '{width}'>")
+        f.write("\n")
+        for i in range(m):
+            for j in range(n):
+                points = hex_points(hex_map_svg[i,j,0],hex_map_svg[i,j,1],hexsvg_size,width,height)
+                str_points = ''
+                for point in points:
+                    str_points = str_points + str(point[0]) +","+ str(point[1]) +" "
+                str_rgb = str(int(hex_color_svg[i,j,0])) +' '+ str(int(hex_color_svg[i,j,1])) +' '+ str(int(hex_color_svg[i,j,2]))
+                string = '\t<polygon points="' + str_points +'" fill="rgb('+str_rgb+')"/>' 
+                f.write(string)
+                f.write("\n")
+            
+        f.write("</svg>")
     return
 
 
-app._unparsable_cell(
-    r"""
-    img_size = 507
-    # 46 by 22
-
-    width = img_size * img_ratio
-    height = img_size
-    hexsvg_size = (width / 45) * (2 / 3)
-
-    hex_map_svg = map_hex(width, height, hexsvg_size)
-
-    svg_file = \"./src/python_project_svg_file/output.svg\"
-
-    with open(svg_file, \"w\") as f:
-        f.write(\"<!DOCTYPE html>\n<html>\n<head>\n<title>SVG Hexagon </title>\n</head>\n<body>\")
-        f.write(\"<svg height='110' width = '300'>\")
-        for i in range():
-        f.write('<polygon points=\"100 0, 50 86, 0 86, 0 0, 0 0, 50 0\" fill=\"rgb(255,255,225)\"/>')
-        f.write(\"</svg>\n</body>\n</html>\")
-    """,
-    name="_"
-)
+@app.cell
+def _(mo):
+    mo.md(""" """)
+    return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    <svg height='110' width = '300'>
-        <polygon points="100 0, 50 86, 0 86, 0 0, 0 0, 50 0" fill="rgb(255,255,225)"/>
-    </svg>
-    """
-    )
+    mo.md(r""" """)
     return
 
 

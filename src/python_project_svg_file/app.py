@@ -37,11 +37,21 @@ def _(np):
     def map_hex(img_x, img_y, size):
         """
         I choose the convention odd-q
+
+        Args:
+            img_x (int) : maximum of img size axis = 0
+            img_y (int) : maximum of img size along axis = 1
+            size (float): Size of the Hexagone
+
+        Return:
+            hex_mapping (np.array) : Array of size (n,m,2) with n the
+            number of hexagon in one row, m the number of hexagon in
+            one column, and 2 dimension for the point in the image.
         """
         horiz_spacing = 3 / 2 * size
         vert_spacing = np.sqrt(3) * size
 
-        hex_per_row = int(img_x // horiz_spacing)+ 2
+        hex_per_row = int(img_x // horiz_spacing) + 2
         hex_per_col = int(img_y // vert_spacing) + 1
         hex_mapping = np.empty((hex_per_row, hex_per_col, 2))
 
@@ -95,7 +105,7 @@ def _(draw_hex_from_mapping, image, map_hex):
     draw_hex_from_mapping(testing_image, hex_mapping=hex_map, size=size)
 
     testing_image.show()
-    return (hex_map,)
+    return hex_map, size
 
 
 @app.cell
@@ -105,8 +115,8 @@ def _(np):
         y_lim = img.size[1]
         nb_px = 0
         avg_color = np.zeros(3)
-        for j in [-20,-5,-1, 0, 1,5,20]:
-            for i in [-20,-5,-1, 0, 1,5,20]:
+        for j in [-20, -5, -1, 0, 1, 5, 20]:
+            for i in [-20, -5, -1, 0, 1, 5, 20]:
                 x = x0 + i
                 y = y0 + j
                 if (x > 0 and x < x_lim) and (y > 0 and y < y_lim):
@@ -124,7 +134,9 @@ def _(np):
 
         for j in range(m):
             for i in range(n):
-                hex_color_map[j, i] = np.intc(avg_px(img, hex_map[j, i, 0], hex_map[j, i, 1]))
+                hex_color_map[j, i] = np.intc(
+                    avg_px(img, hex_map[j, i, 0], hex_map[j, i, 1])
+                )
 
         return hex_color_map
     return (hex_color_map,)
@@ -141,8 +153,7 @@ def _(hex_color_map, hex_map, image):
 @app.cell
 def _(np):
     def hex_points(x, y, size_input, imagesizex, imagesizey):
-    
-        size = size_input *1.01
+        size = size_input * 1.01
         i = np.array(range(6))
         angle_deg = 60 * i
         angle_rad = np.pi / 180 * angle_deg
@@ -157,48 +168,82 @@ def _(np):
         points[:, 1] = np.where(
             points[:, 1] < imagesizey, points[:, 1], imagesizey
         )
-        return np.round(points,3)
+        return np.round(points, 3)
     return (hex_points,)
 
 
 @app.cell
-def _(hex_color_map, hex_map, hex_points, image, img_ratio, map_hex, np):
-    img_size = 1440
-    # 46 by 22
+def _(Image, hex_color_map, hex_points, img_ratio, map_hex, np, size):
+    def png_to_svg(
+        input_path=".\image\png\screenshot.png",
+        ouput_s=1440,
+        output_path=".\image\svg\output.svg",
+    ):
+        img_size = ouput_s
+        # 46 by 22
+        image = Image.open(input_path)
+        hex_map = map_hex(image.size[0], image.size[1], size)
 
-    width = np.round(img_size * img_ratio,3)
-    height = np.round(img_size,3)
-    hexsvg_size = (width / 46) * (2 / 3)
+        width = np.round(img_size * img_ratio, 3)
+        height = np.round(img_size, 3)
+        hexsvg_size = (width / 46) * (2 / 3)
 
-    hex_map_svg   = map_hex(width, height, hexsvg_size)
+        hex_map_svg = map_hex(width, height, hexsvg_size)
 
-    hex_color_svg = hex_color_map(image,hex_map)
+        hex_color_svg = hex_color_map(image, hex_map)
 
-    m,n = hex_map_svg.shape[:2]
+        m, n = hex_map_svg.shape[:2]
 
-    svg_file = "./src/python_project_svg_file/output.svg"
+        svg_file = output_path
 
-    with open(svg_file, "w") as f:
-        f.write(f"<svg height='{height}' width = '{width}' xmlns='http://www.w3.org/2000/svg'> ")
-        f.write("\n")
-        for i in range(m):
-            for j in range(n):
-                points = hex_points(hex_map_svg[i,j,0],hex_map_svg[i,j,1],hexsvg_size,width,height)
-                str_points = ''
-                for point in points:
-                    str_points = str_points + str(point[0]) +","+ str(point[1]) +" "
-                str_rgb = str(int(hex_color_svg[i,j,0])) +' '+ str(int(hex_color_svg[i,j,1])) +' '+ str(int(hex_color_svg[i,j,2]))
-                string = '\t<polygon points="' + str_points +'" fill="rgb('+str_rgb+')"/>' 
-                f.write(string)
-                f.write("\n")
-            
-        f.write("</svg>")
+        with open(svg_file, "w") as f:
+            f.write(
+                f"<svg height='{height}' width = '{width}' xmlns='http://www.w3.org/2000/svg'> "
+            )
+            f.write("\n")
+            for i in range(m):
+                for j in range(n):
+                    points = hex_points(
+                        hex_map_svg[i, j, 0],
+                        hex_map_svg[i, j, 1],
+                        hexsvg_size,
+                        width,
+                        height,
+                    )
+                    str_points = ""
+                    for point in points:
+                        str_points = (
+                            str_points + str(point[0]) + "," + str(point[1]) + " "
+                        )
+                    str_rgb = (
+                        str(int(hex_color_svg[i, j, 0]))
+                        + " "
+                        + str(int(hex_color_svg[i, j, 1]))
+                        + " "
+                        + str(int(hex_color_svg[i, j, 2]))
+                    )
+                    string = (
+                        '\t<polygon points="'
+                        + str_points
+                        + '" fill="rgb('
+                        + str_rgb
+                        + ')"/>'
+                    )
+                    f.write(string)
+                    f.write("\n")
+
+            f.write("</svg>")
+    return (png_to_svg,)
+
+
+@app.cell
+def _(png_to_svg):
+    png_to_svg()
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r""" """)
+@app.cell
+def _():
     return
 
 

@@ -153,7 +153,7 @@ def _(hex_color_map, hex_map, image):
 @app.cell
 def _(np):
     def hex_points(x, y, size_input, imagesizex, imagesizey):
-        size = size_input * 1.01
+        size = size_input * 0.8
         i = np.array(range(6))
         angle_deg = 60 * i
         angle_rad = np.pi / 180 * angle_deg

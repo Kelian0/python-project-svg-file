@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw
 import numpy as np
+from python_project_svg_file.Sampling_strategy import circle_filter
 
 class HexTransform:
     
@@ -61,6 +62,21 @@ class HexTransform:
                     draw.circle((self.input_maping[j, i, 0], self.input_maping[j, i, 1]), radius=self.input_hex_size, outline=(0, 255, 0, 0))
         image.show()
 
+    def avg_px(self, x0, y0):
+        x_lim = self.xmax
+        y_lim = self.ymax
+        nb_px = 0
+        avg_color = np.zeros(3)
+        filter = circle_filter
+        mask_x,mask_y = filter.mask(filter,x=x0,y=y0,radius=self.input_hex_size)
+        for i in range(len(mask_x)):
+                x = x0 + mask_x[i]
+                y = y0 + mask_y[i]
+                if (x > 0 and x < x_lim) and (y > 0 and y < y_lim):
+                    avg_color += np.array(self.input_image.getpixel((x, y)))
+                    nb_px += 1
+        return avg_color / nb_px
+
     def build_svg(self,output_path):
         pass
 
@@ -73,4 +89,4 @@ if __name__ == "__main__":
     hex_map = HexTransform()
     print(hex_map)
     hex_map.map(22)
-    hex_map.show_mapping()
+    print(hex_map.avg_px(0,0))

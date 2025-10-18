@@ -4,14 +4,15 @@ from python_project_svg_file.Sampling_strategy import circle_filter
 
 class HexTransform:
     
-    def __init__(self, input_path="image\png\screenshot.png"):
+    def __init__(self, input_path="image\png\screenshot.png",out_size=1440):
         self.input_path = input_path
-        self.input_image = Image.open("image\png\screenshot.png")
+        self.input_image = Image.open(self.input_path)
         self.xmax = self.input_image.size[0]
         self.ymax = self.input_image.size[1]
         self.img_ratio = self.xmax/self.ymax
         self.input_maping = None
         self.input_hex_size = None
+        self.output_hex_size = None
         pass
 
     def __str__(self):
@@ -62,7 +63,27 @@ class HexTransform:
                     draw.circle((self.input_maping[j, i, 0], self.input_maping[j, i, 1]), radius=self.input_hex_size, outline=(0, 255, 0, 0))
         image.show()
 
-    def avg_px(self, x0, y0):
+        
+    def _hex_points(self,x, y):
+        size = self.input_hex_size * 0.8
+        i = np.array(range(6))
+        angle_deg = 60 * i
+        angle_rad = np.pi / 180 * angle_deg
+        points = np.empty((6, 2))
+        points[:, 0] = x + size * np.cos(angle_rad)
+        points[:, 1] = y + size * np.sin(angle_rad)
+        points[:, 0] = np.where(points[:, 0] > 0, points[:, 0], 0)
+        points[:, 0] = np.where(
+            points[:, 0] < self.xmax, points[:, 0], self.xmax
+        )
+        points[:, 1] = np.where(points[:, 1] > 0, points[:, 1], 0)
+        points[:, 1] = np.where(
+            points[:, 1] < self.ymax, points[:, 1], self.ymax
+        )
+        return np.round(points, 3)
+    
+
+    def _avg_px(self, x0, y0):
         x_lim = self.xmax
         y_lim = self.ymax
         nb_px = 0

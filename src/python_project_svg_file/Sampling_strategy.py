@@ -12,6 +12,7 @@ class Filter():
     def show_mask(self):
         i,j = self.mask(0,0,10)
         print(i,j)
+        plt.scatter(i,j)
         plt.show()
         return
         
@@ -44,5 +45,5 @@ class circle_filter(Filter):
         return X_out,Y_out
     
 if __name__ == '__main__':
-    filter = circle_filter()
+    filter = square_filter()
     filter.show_mask()

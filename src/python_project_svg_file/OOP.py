@@ -162,6 +162,6 @@ class HexTransform:
 
 if __name__ == "__main__":
     print('This is run from OOP.py file')
-    hex_map = HexTransform(input_hex_size = 13)
-    hex_map.build_svg(".\image\svg\out.svg",1440)
+    hex_map = HexTransform(input_path="./image/png/bliss.png",input_hex_size = 15)
+    hex_map.build_svg("./image/svg/out.svg",1440)
 
